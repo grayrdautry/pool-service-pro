@@ -1,0 +1,9 @@
+{
+  "name": "Pool Service Pro",
+  "short_name": "PoolPro",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#1e3a8a",
+  "theme_color": "#1e3a8a",
+  "icons": []
+}
