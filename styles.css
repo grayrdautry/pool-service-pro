@@ -147,3 +147,41 @@ button:active {
     grid-template-columns: 1fr;
   }
 }
+
+.nav button {
+  width: auto;
+  margin-left: 10px;
+  padding: 8px 14px;
+}
+
+.card {
+  background: white;
+  padding: 24px;
+  border-radius: 20px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.06);
+  margin-top: 20px;
+}
+
+.historyItem {
+  padding: 14px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.nav button {
+  width: auto;
+  margin-left: 10px;
+  padding: 8px 14px;
+}
+
+.card {
+  background: white;
+  padding: 24px;
+  border-radius: 20px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.06);
+  margin-top: 20px;
+}
+
+.historyItem {
+  padding: 14px 0;
+  border-bottom: 1px solid #eee;
+}
