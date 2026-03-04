@@ -15,173 +15,97 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
 }
 
-.header h1 {
-  margin: 0;
-  font-size: 26px;
-  font-weight: 600;
-}
-
-.total {
-  background: #007aff;
-  color: white;
-  padding: 10px 18px;
-  border-radius: 20px;
-  font-weight: 600;
-  font-size: 16px;
+.nav button {
+  width: auto;
+  margin-left: 10px;
+  padding: 8px 14px;
 }
 
 .layout {
   display: grid;
   grid-template-columns: 1.2fr 1fr;
   gap: 24px;
+  margin-top: 20px;
 }
 
-.left, .right {
+.card {
+  background: white;
+  padding: 24px;
+  border-radius: 20px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.06);
+  margin-top: 20px;
+}
+
+.statGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.statCard {
   background: white;
   padding: 24px;
   border-radius: 20px;
   box-shadow: 0 8px 30px rgba(0,0,0,0.06);
 }
 
-/* Section Titles */
-
-h2 {
-  margin-top: 0;
-  font-size: 18px;
-  font-weight: 600;
-  margin-bottom: 16px;
+.statLabel {
+  font-size: 14px;
+  color: #6e6e73;
+  margin-bottom: 8px;
 }
 
-/* Buttons */
+.statValue {
+  font-size: 24px;
+  font-weight: 600;
+}
 
 button {
   width: 100%;
-  padding: 14px 16px;
-  margin-bottom: 12px;
-  border-radius: 14px;
-  border: 1px solid #e0e0e0;
+  padding: 12px;
+  margin-bottom: 10px;
+  border-radius: 12px;
+  border: 1px solid #ddd;
   background: #f9fafb;
   font-size: 15px;
-  text-align: left;
   cursor: pointer;
-  transition: all 0.15s ease;
 }
 
 button:hover {
   background: #f1f3f5;
 }
 
-button:active {
-  transform: scale(0.98);
-}
-
-/* Part Cards */
-
 .partCard {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  padding: 16px;
-  border-radius: 16px;
-  border: 1px solid #ececec;
-  margin-bottom: 14px;
-  background: #ffffff;
-  transition: box-shadow 0.15s ease;
+  padding: 14px;
+  border: 1px solid #eee;
+  border-radius: 14px;
+  margin-bottom: 12px;
 }
-
-.partCard:hover {
-  box-shadow: 0 6px 20px rgba(0,0,0,0.05);
-}
-
-.partCard strong {
-  display: block;
-  margin-bottom: 4px;
-}
-
-/* Job Rows */
 
 .jobRow {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  padding: 14px 0;
+  padding: 12px 0;
   border-bottom: 1px solid #eee;
 }
 
-.jobRow:last-child {
-  border-bottom: none;
-}
-
-.jobRow strong {
-  display: block;
-  margin-bottom: 4px;
-}
-
-/* Quantity Controls */
-
-.jobRow button {
-  width: 36px;
-  height: 36px;
-  padding: 0;
-  margin: 0 4px;
-  border-radius: 10px;
-  text-align: center;
-}
-
-/* Total Section */
-
 .jobTotal {
   margin-top: 20px;
-  font-size: 18px;
   font-weight: 600;
-  text-align: right;
+  font-size: 18px;
 }
 
-/* Responsive */
+.historyItem {
+  padding: 14px 0;
+  border-bottom: 1px solid #eee;
+}
 
 @media (max-width: 900px) {
   .layout {
     grid-template-columns: 1fr;
   }
-}
-
-.nav button {
-  width: auto;
-  margin-left: 10px;
-  padding: 8px 14px;
-}
-
-.card {
-  background: white;
-  padding: 24px;
-  border-radius: 20px;
-  box-shadow: 0 8px 30px rgba(0,0,0,0.06);
-  margin-top: 20px;
-}
-
-.historyItem {
-  padding: 14px 0;
-  border-bottom: 1px solid #eee;
-}
-
-.nav button {
-  width: auto;
-  margin-left: 10px;
-  padding: 8px 14px;
-}
-
-.card {
-  background: white;
-  padding: 24px;
-  border-radius: 20px;
-  box-shadow: 0 8px 30px rgba(0,0,0,0.06);
-  margin-top: 20px;
-}
-
-.historyItem {
-  padding: 14px 0;
-  border-bottom: 1px solid #eee;
 }
