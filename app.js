@@ -74,9 +74,7 @@ function App() {
     setJobParts(function (prev) {
       const copy = prev.slice();
       copy[index].quantity += delta;
-      if (copy[index].quantity <= 0) {
-        copy.splice(index, 1);
-      }
+      if (copy[index].quantity <= 0) copy.splice(index, 1);
       return copy;
     });
   }
@@ -129,13 +127,32 @@ function App() {
       </header>
 
       {view === "dashboard" && (
-        <div className="card">
-          <h2>Dashboard</h2>
-          <p><strong>Total Revenue:</strong> ${totalRevenue.toFixed(2)}</p>
-          <p><strong>Total Jobs:</strong> {jobs.length}</p>
-          <button onClick={function () { setView("new"); }}>
-            Start New Job
-          </button>
+        <div className="dashboard">
+          <div className="statGrid">
+            <div className="statCard">
+              <div className="statLabel">Total Revenue</div>
+              <div className="statValue">${totalRevenue.toFixed(2)}</div>
+            </div>
+
+            <div className="statCard">
+              <div className="statLabel">Total Jobs</div>
+              <div className="statValue">{jobs.length}</div>
+            </div>
+
+            <div className="statCard">
+              <div className="statLabel">Avg Job</div>
+              <div className="statValue">
+                ${jobs.length ? (totalRevenue / jobs.length).toFixed(2) : "0.00"}
+              </div>
+            </div>
+          </div>
+
+          <div className="card" style={{ marginTop: "30px" }}>
+            <h2>Quick Actions</h2>
+            <button onClick={function () { setView("new"); }}>
+              Start New Job
+            </button>
+          </div>
         </div>
       )}
 
