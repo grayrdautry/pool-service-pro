@@ -1,5 +1,4 @@
-const CSV_URL =
-  "https://docs.google.com/spreadsheets/d/1-4_vmBPcswsiePsrr9nMPOR2eTapY4f867uPkUuB4YU/export?format=csv";
+const CSV_URL = "https://docs.google.com/spreadsheets/d/1-4_vmBPcswsiePsrr9nMPOR2eTapY4f867uPkUuB4YU/export?format=csv";
 
 function App() {
   const [partsData, setPartsData] = React.useState({});
@@ -7,7 +6,7 @@ function App() {
   const [category, setCategory] = React.useState(null);
   const [jobParts, setJobParts] = React.useState([]);
 
-  React.useEffect(() => {
+  React.useEffect(function () {
     loadParts();
   }, []);
 
@@ -21,11 +20,11 @@ function App() {
     const response = await fetch(CSV_URL);
     const text = await response.text();
 
-    const rows = text.split("\n").map(r =>
-      r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c =>
-        c.replace(/^"|"$/g, "").trim()
-      )
-    );
+    const rows = text.split("\n").map(function (r) {
+      return r.split(",").map(function (c) {
+        return c.replace(/^"|"$/g, "").trim();
+      });
+    });
 
     const headers = rows[0];
     const dataRows = rows.slice(1);
@@ -38,7 +37,7 @@ function App() {
 
     const structured = {};
 
-    dataRows.forEach(row => {
+    dataRows.forEach(function (row) {
       const b = row[iBrand];
       const c = row[iCategory];
       const name = row[iPartName];
@@ -53,7 +52,7 @@ function App() {
       structured[b][c].push({
         partName: name,
         partNumber: number,
-        price
+        price: price
       });
     });
 
@@ -62,14 +61,18 @@ function App() {
   }
 
   function addPart(part) {
-    setJobParts(prev => [...prev, { ...part, quantity: 1 }]);
+    setJobParts(function (prev) {
+      return prev.concat([{ ...part, quantity: 1 }]);
+    });
   }
 
   function updateQty(index, delta) {
-    setJobParts(prev => {
-      const copy = [...prev];
+    setJobParts(function (prev) {
+      const copy = prev.slice();
       copy[index].quantity += delta;
-      if (copy[index].quantity <= 0) copy.splice(index, 1);
+      if (copy[index].quantity <= 0) {
+        copy.splice(index, 1);
+      }
       return copy;
     });
   }
@@ -78,10 +81,9 @@ function App() {
   const categories = brand ? Object.keys(partsData[brand] || {}) : [];
   const parts = brand && category ? partsData[brand][category] : [];
 
-  const total = jobParts.reduce(
-    (sum, p) => sum + p.price * p.quantity,
-    0
-  );
+  const total = jobParts.reduce(function (sum, p) {
+    return sum + p.price * p.quantity;
+  }, 0);
 
   return (
     <div className="app">
@@ -93,62 +95,73 @@ function App() {
       <div className="layout">
         <div className="left">
           {!brand && (
-            <>
+            <div>
               <h2>Select Brand</h2>
-              {brands.map(b => (
-                <button key={b} onClick={() => setBrand(b)}>
-                  {b}
-                </button>
-              ))}
-            </>
+              {brands.map(function (b) {
+                return (
+                  <button key={b} onClick={function () { setBrand(b); }}>
+                    {b}
+                  </button>
+                );
+              })}
+            </div>
           )}
 
           {brand && !category && (
-            <>
+            <div>
               <h2>{brand}</h2>
-              <button onClick={() => setBrand(null)}>← Back</button>
-              {categories.map(c => (
-                <button key={c} onClick={() => setCategory(c)}>
-                  {c}
-                </button>
-              ))}
-            </>
+              <button onClick={function () { setBrand(null); }}>← Back</button>
+              {categories.map(function (c) {
+                return (
+                  <button key={c} onClick={function () { setCategory(c); }}>
+                    {c}
+                  </button>
+                );
+              })}
+            </div>
           )}
 
           {brand && category && (
-            <>
+            <div>
               <h2>{brand} → {category}</h2>
-              <button onClick={() => setCategory(null)}>← Back</button>
-              {parts.map((p, i) => (
-                <div key={i} className="partCard">
-                  <div>
-                    <strong>{p.partName}</strong>
-                    <div>Part #: {p.partNumber}</div>
-                    <div>${p.price.toFixed(2)}</div>
+              <button onClick={function () { setCategory(null); }}>← Back</button>
+
+              {parts.map(function (p, i) {
+                return (
+                  <div key={i} className="partCard">
+                    <div>
+                      <strong>{p.partName}</strong>
+                      <div>Part #: {p.partNumber}</div>
+                      <div>${p.price.toFixed(2)}</div>
+                    </div>
+                    <button onClick={function () { addPart(p); }}>
+                      Add
+                    </button>
                   </div>
-                  <button onClick={() => addPart(p)}>Add</button>
-                </div>
-              ))}
-            </>
+                );
+              })}
+            </div>
           )}
         </div>
 
         <div className="right">
           <h2>Current Job</h2>
 
-          {jobParts.map((p, i) => (
-            <div key={i} className="jobRow">
-              <div>
-                <strong>{p.partName}</strong>
-                <div>{p.quantity} × ${p.price.toFixed(2)}</div>
-              </div>
+          {jobParts.map(function (p, i) {
+            return (
+              <div key={i} className="jobRow">
+                <div>
+                  <strong>{p.partName}</strong>
+                  <div>{p.quantity} × ${p.price.toFixed(2)}</div>
+                </div>
 
-              <div>
-                <button onClick={() => updateQty(i, -1)}>-</button>
-                <button onClick={() => updateQty(i, 1)}>+</button>
+                <div>
+                  <button onClick={function () { updateQty(i, -1); }}>-</button>
+                  <button onClick={function () { updateQty(i, 1); }}>+</button>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
 
           <div className="jobTotal">
             Total: ${total.toFixed(2)}
