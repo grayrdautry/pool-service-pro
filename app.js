@@ -2,33 +2,31 @@ const CSV_URL = "https://docs.google.com/spreadsheets/d/1-4_vmBPcswsiePsrr9nMPOR
 
 function App() {
   const [view, setView] = React.useState("dashboard");
+  const [customers, setCustomers] = React.useState(
+    JSON.parse(localStorage.getItem("customers") || "[]")
+  );
+  const [selectedCustomer, setSelectedCustomer] = React.useState(null);
   const [partsData, setPartsData] = React.useState({});
   const [brand, setBrand] = React.useState(null);
   const [category, setCategory] = React.useState(null);
   const [jobParts, setJobParts] = React.useState([]);
-  const [jobs, setJobs] = React.useState(
-    JSON.parse(localStorage.getItem("jobs") || "[]")
-  );
+  const [search, setSearch] = React.useState("");
 
   React.useEffect(function () {
     loadParts();
   }, []);
 
-  async function loadParts() {
-    const cached = localStorage.getItem("partsData");
-    if (cached) {
-      setPartsData(JSON.parse(cached));
-      return;
-    }
+  React.useEffect(function () {
+    localStorage.setItem("customers", JSON.stringify(customers));
+  }, [customers]);
 
+  async function loadParts() {
     const response = await fetch(CSV_URL);
     const text = await response.text();
 
-    const rows = text.split("\n").map(function (r) {
-      return r.split(",").map(function (c) {
-        return c.replace(/^"|"$/g, "").trim();
-      });
-    });
+    const rows = text.split("\n").map(r =>
+      r.split(",").map(c => c.replace(/^"|"$/g, "").trim())
+    );
 
     const headers = rows[0];
     const dataRows = rows.slice(1);
@@ -41,7 +39,7 @@ function App() {
 
     const structured = {};
 
-    dataRows.forEach(function (row) {
+    dataRows.forEach(row => {
       const b = row[iBrand];
       const c = row[iCategory];
       const name = row[iPartName];
@@ -60,31 +58,49 @@ function App() {
       });
     });
 
-    localStorage.setItem("partsData", JSON.stringify(structured));
     setPartsData(structured);
   }
 
+  function addCustomer(customer) {
+    const newCustomer = {
+      id: Date.now(),
+      ...customer,
+      jobs: []
+    };
+    setCustomers([...customers, newCustomer]);
+    setSelectedCustomer(newCustomer);
+    setView("customer");
+  }
+
+  function deleteCustomer(id) {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this customer and all their jobs?"
+    );
+    if (!confirmDelete) return;
+
+    setCustomers(customers.filter(c => c.id !== id));
+    setSelectedCustomer(null);
+    setView("dashboard");
+  }
+
   function addPart(part) {
-    setJobParts(function (prev) {
-      return prev.concat([{ ...part, quantity: 1 }]);
-    });
+    setJobParts([...jobParts, { ...part, quantity: 1 }]);
   }
 
   function updateQty(index, delta) {
-    setJobParts(function (prev) {
-      const copy = prev.slice();
-      copy[index].quantity += delta;
-      if (copy[index].quantity <= 0) copy.splice(index, 1);
-      return copy;
-    });
+    const copy = [...jobParts];
+    copy[index].quantity += delta;
+    if (copy[index].quantity <= 0) copy.splice(index, 1);
+    setJobParts(copy);
   }
 
   function saveJob() {
-    if (jobParts.length === 0) return;
+    if (!selectedCustomer || jobParts.length === 0) return;
 
-    const total = jobParts.reduce(function (sum, p) {
-      return sum + p.price * p.quantity;
-    }, 0);
+    const total = jobParts.reduce(
+      (sum, p) => sum + p.price * p.quantity,
+      0
+    );
 
     const newJob = {
       id: Date.now(),
@@ -93,167 +109,225 @@ function App() {
       total: total
     };
 
-    const updatedJobs = jobs.concat([newJob]);
-    setJobs(updatedJobs);
-    localStorage.setItem("jobs", JSON.stringify(updatedJobs));
+    const updated = customers.map(c =>
+      c.id === selectedCustomer.id
+        ? { ...c, jobs: [...c.jobs, newJob] }
+        : c
+    );
 
+    setCustomers(updated);
     setJobParts([]);
     setBrand(null);
     setCategory(null);
-    setView("dashboard");
+    setView("customer");
   }
 
   const brands = Object.keys(partsData);
   const categories = brand ? Object.keys(partsData[brand] || {}) : [];
   const parts = brand && category ? partsData[brand][category] : [];
 
-  const currentTotal = jobParts.reduce(function (sum, p) {
-    return sum + p.price * p.quantity;
-  }, 0);
-
-  const totalRevenue = jobs.reduce(function (sum, j) {
-    return sum + j.total;
-  }, 0);
+  const filteredCustomers = customers.filter(c =>
+    c.name.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
     <div className="app">
-      <header className="header">
-        <h1>Pool Service Pro</h1>
-        <div className="nav">
-          <button onClick={function () { setView("dashboard"); }}>Dashboard</button>
-          <button onClick={function () { setView("new"); }}>New Job</button>
-          <button onClick={function () { setView("history"); }}>History</button>
-        </div>
-      </header>
 
       {view === "dashboard" && (
-        <div className="dashboard">
-          <div className="statGrid">
-            <div className="statCard">
-              <div className="statLabel">Total Revenue</div>
-              <div className="statValue">${totalRevenue.toFixed(2)}</div>
-            </div>
+        <div>
+          <input
+            placeholder="Search Customer"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
 
-            <div className="statCard">
-              <div className="statLabel">Total Jobs</div>
-              <div className="statValue">{jobs.length}</div>
-            </div>
+          <button className="primary" onClick={() => setView("selectCustomer")}>
+            Start Job
+          </button>
 
-            <div className="statCard">
-              <div className="statLabel">Avg Job</div>
-              <div className="statValue">
-                ${jobs.length ? (totalRevenue / jobs.length).toFixed(2) : "0.00"}
+          <button onClick={() => setView("addCustomer")}>
+            Add Customer
+          </button>
+
+          <div className="card">
+            <h3>Recent Customers</h3>
+            {filteredCustomers.slice(-5).reverse().map(c => (
+              <div
+                key={c.id}
+                className="listItem"
+                onClick={() => {
+                  setSelectedCustomer(c);
+                  setView("customer");
+                }}
+              >
+                {c.name}
               </div>
-            </div>
-          </div>
-
-          <div className="card" style={{ marginTop: "30px" }}>
-            <h2>Quick Actions</h2>
-            <button onClick={function () { setView("new"); }}>
-              Start New Job
-            </button>
+            ))}
           </div>
         </div>
       )}
 
-      {view === "new" && (
-        <div className="layout">
-          <div className="left card">
-            {!brand && (
-              <div>
-                <h2>Select Brand</h2>
-                {brands.map(function (b) {
-                  return (
-                    <button key={b} onClick={function () { setBrand(b); }}>
-                      {b}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+      {view === "addCustomer" && (
+        <CustomerForm
+          onSave={addCustomer}
+          onBack={() => setView("dashboard")}
+        />
+      )}
 
-            {brand && !category && (
-              <div>
-                <h2>{brand}</h2>
-                <button onClick={function () { setBrand(null); }}>← Back</button>
-                {categories.map(function (c) {
-                  return (
-                    <button key={c} onClick={function () { setCategory(c); }}>
-                      {c}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+      {view === "selectCustomer" && (
+        <div>
+          <input
+            placeholder="Search Customer"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
 
-            {brand && category && (
-              <div>
-                <h2>{brand} → {category}</h2>
-                <button onClick={function () { setCategory(null); }}>← Back</button>
+          {filteredCustomers.map(c => (
+            <div
+              key={c.id}
+              className="listItem"
+              onClick={() => {
+                setSelectedCustomer(c);
+                setView("newJob");
+              }}
+            >
+              {c.name}
+            </div>
+          ))}
 
-                {parts.map(function (p, i) {
-                  return (
-                    <div key={i} className="partCard">
-                      <div>
-                        <strong>{p.partName}</strong>
-                        <div>Part #: {p.partNumber}</div>
-                        <div>${p.price.toFixed(2)}</div>
-                      </div>
-                      <button onClick={function () { addPart(p); }}>
-                        Add
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+          <button onClick={() => setView("addCustomer")}>
+            + Add New Customer
+          </button>
+        </div>
+      )}
+
+      {view === "customer" && selectedCustomer && (
+        <div className="card">
+          <h2>{selectedCustomer.name}</h2>
+          <div>{selectedCustomer.address}</div>
+          <div>{selectedCustomer.phone}</div>
+
+          <button
+            className="primary"
+            onClick={() => setView("newJob")}
+          >
+            Add Job
+          </button>
+
+          <button
+            className="danger"
+            onClick={() => deleteCustomer(selectedCustomer.id)}
+          >
+            Delete Customer
+          </button>
+
+          <h3>Job History</h3>
+
+          {selectedCustomer.jobs.map(job => (
+            <details key={job.id} className="jobHistory">
+              <summary>
+                {job.date} — ${job.total.toFixed(2)}
+              </summary>
+              {job.parts.map((p, i) => (
+                <div key={i}>
+                  {p.quantity} × {p.partName}
+                </div>
+              ))}
+            </details>
+          ))}
+        </div>
+      )}
+
+      {view === "newJob" && (
+        <div>
+          <div className="card">
+            <h3>{selectedCustomer.name}</h3>
           </div>
 
-          <div className="right card">
-            <h2>Current Job</h2>
+          {!brand && (
+            <div className="card">
+              <h3>Select Brand</h3>
+              {brands.map(b => (
+                <button key={b} onClick={() => setBrand(b)}>
+                  {b}
+                </button>
+              ))}
+            </div>
+          )}
 
-            {jobParts.map(function (p, i) {
-              return (
-                <div key={i} className="jobRow">
+          {brand && !category && (
+            <div className="card">
+              <button onClick={() => setBrand(null)}>← Back</button>
+              {categories.map(c => (
+                <button key={c} onClick={() => setCategory(c)}>
+                  {c}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {brand && category && (
+            <div className="card">
+              <button onClick={() => setCategory(null)}>← Back</button>
+
+              {parts.map((p, i) => (
+                <div key={i} className="partRow">
                   <div>
                     <strong>{p.partName}</strong>
-                    <div>{p.quantity} × ${p.price.toFixed(2)}</div>
+                    <div>${p.price.toFixed(2)}</div>
                   </div>
-
-                  <div>
-                    <button onClick={function () { updateQty(i, -1); }}>-</button>
-                    <button onClick={function () { updateQty(i, 1); }}>+</button>
-                  </div>
+                  <button onClick={() => addPart(p)}>Add</button>
                 </div>
-              );
-            })}
-
-            <div className="jobTotal">
-              Total: ${currentTotal.toFixed(2)}
+              ))}
             </div>
+          )}
 
-            <button onClick={saveJob}>
-              Save Job
-            </button>
-          </div>
-        </div>
-      )}
-
-      {view === "history" && (
-        <div className="card">
-          <h2>Job History</h2>
-          {jobs.map(function (j) {
-            return (
-              <div key={j.id} className="historyItem">
-                <div>
-                  <strong>{j.date}</strong>
-                  <div>${j.total.toFixed(2)}</div>
+          {jobParts.length > 0 && (
+            <div className="card">
+              {jobParts.map((p, i) => (
+                <div key={i} className="partRow">
+                  <div>
+                    {p.quantity} × {p.partName}
+                  </div>
+                  <div>
+                    <button onClick={() => updateQty(i, -1)}>-</button>
+                    <button onClick={() => updateQty(i, 1)}>+</button>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              ))}
+
+              <button className="primary" onClick={saveJob}>
+                Save Job
+              </button>
+            </div>
+          )}
         </div>
       )}
+
+    </div>
+  );
+}
+
+function CustomerForm({ onSave, onBack }) {
+  const [name, setName] = React.useState("");
+  const [address, setAddress] = React.useState("");
+  const [phone, setPhone] = React.useState("");
+  const [notes, setNotes] = React.useState("");
+
+  return (
+    <div className="card">
+      <h2>New Customer</h2>
+
+      <input placeholder="Name" value={name} onChange={e => setName(e.target.value)} />
+      <input placeholder="Address" value={address} onChange={e => setAddress(e.target.value)} />
+      <input placeholder="Phone" value={phone} onChange={e => setPhone(e.target.value)} />
+      <textarea placeholder="Notes" value={notes} onChange={e => setNotes(e.target.value)} />
+
+      <button className="primary" onClick={() => onSave({ name, address, phone, notes })}>
+        Save Customer
+      </button>
+
+      <button onClick={onBack}>Cancel</button>
     </div>
   );
 }
